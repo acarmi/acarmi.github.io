@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>The Hyper-Continuum - 3D Rotating Torus</title> <!-- Updated Title -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <style>
+    /* --- CSS (Keep the previous CSS, no changes needed here) --- */
+    body {
+      background: #050505;
+      margin: 0;
+      padding: 0;
+      font-family: 'Courier New', monospace;
+      overflow-x: hidden;
+      color: #0ae4e4;
+    }
+
+    .main-container {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      height: 100vh;
+      border: 1px solid #0ae4e4;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* Grid overlay effect */
+    .main-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        linear-gradient(rgba(10, 228, 228, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(10, 228, 228, 0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Dashboard header */
+    .dashboard-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: rgba(0,10,20,0.7);
+      border-bottom: 1px solid #0ae4e4;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .dashboard-header h1 {
+      font-size: 18px;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .dashboard-status {
+      display: flex;
+      gap: 20px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #0ae4e4;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .visualization-container {
+      width: 50%;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      border-right: 1px solid #0ae4e4;
+      box-sizing: border-box;
+    }
+
+    .content-container {
+      width: 50%;
+      height: 100vh;
+      overflow-y: auto;
+      color: #0ae4e4;
+      padding: 50px 20px 20px;
+      box-sizing: border-box;
+      font-size: 0.9rem;
+      position: relative;
+    }
+
+    .content-container::before {
+      content: '';
+      position: absolute;
+      top: 40px;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: linear-gradient(to bottom, rgba(5,5,5,1) 0%, rgba(5,5,5,0) 100%);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    #container { /* Renamed from original, but assuming it's the inner wrapper in vis */
+      width: 100%;
+      height: 100%; /* Make container fill parent */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* padding-top: 40px;  Adjust if needed, header is absolute */
+    }
+
+    #visualization {
+      width: 100%;
+      /* height: 70vh; Let flex grow handle it */
+      flex-grow: 1; /* Allow visualization to take available space */
+      position: relative;
+      overflow: hidden;
+      background-color: #000; /* Ensure SVG background is black */
+    }
+
+    .control-panel {
+      background: rgba(0,15,30,0.8);
+      padding: 15px;
+      border-radius: 0;
+      /* margin-top: 10px; Removed, use flex layout */
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      color: #0ae4e4;
+      width: 100%;
+      box-sizing: border-box;
+      border-top: 1px solid #0ae4e4;
+      /* position: absolute; Removed */
+      /* bottom: 0; */
+      /* left: 0; */
+      flex-shrink: 0; /* Prevent control panel from shrinking */
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 110px;
+    }
+
+    label {
+      font-size: 10px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: #052e2e;
+      border-radius: 0;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 10px;
+      height: 16px;
+      background: #0ae4e4;
+      cursor: pointer;
+      border: none;
+    }
+
+    button {
+      padding: 6px 12px;
+      border: 1px solid #0ae4e4;
+      background: rgba(10, 228, 228, 0.1);
+      color: #0ae4e4;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: rgba(10, 228, 228, 0.2);
+    }
+
+    button.pause-btn {
+      background: rgba(228, 10, 10, 0.1);
+      border-color: #e40a0a;
+      color: #e40a0a;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .zoom-btn, .rotate-btn {
+      min-width: 30px;
+      padding: 4px;
+    }
+
+    .info-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0ae4e4;
+      font-size: 10px;
+      padding: 5px 0; /* Add some padding */
+      letter-spacing: 1px;
+      width: 100%;
+      background: rgba(0,15,30,0.8); /* Match control panel */
+      border-top: 1px solid #0ae4e4; /* Add separator */
+      box-sizing: border-box;
+       flex-shrink: 0; /* Prevent shrinking */
+    }
+
+    .overlay-controls {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,15,30,0.7);
+      padding: 8px;
+      border: 1px solid #0ae4e4;
+      display: flex;
+      gap: 5px;
+      z-index: 10;
+    }
+
+    .overlay-controls button {
+      padding: 4px 8px;
+      font-size: 10px;
+    }
+
+    /* Content styling */
+    h1, h2, h3, h4 {
+      color: #ffffff;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #0ae4e4;
+    }
+
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.3rem; }
+    h3 { font-size: 1.1rem; }
+    h4 { font-size: 1rem; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-header::before {
+      content: '>';
+      color: #0ae4e4;
+    }
+
+    .prompt {
+      background: rgba(10, 228, 228, 0.05);
+      border-left: 3px solid #0ae4e4;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .response {
+      margin-bottom: 20px;
+    }
+
+    .highlight-text {
+      font-style: italic;
+      font-size: 0.9em;
+      color: #66ffcc;
+      opacity: 0.9;
+    }
+
+    .math-formula {
+      font-family: "Times New Roman", Times, serif;
+      text-align: center;
+      margin: 20px 0;
+      font-size: 1.2em;
+      background-color: rgba(0, 20, 30, 0.3);
+      padding: 15px;
+      border: 1px solid #0ae4e4;
+      position: relative;
+    }
+
+    .math-formula::before,
+    .math-formula::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border: 1px solid #0ae4e4;
+    }
+
+    .math-formula::before {
+      top: -5px;
+      left: -5px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .math-formula::after {
+      bottom: -5px;
+      right: -5px;
+      border-left: none;
+      border-top: none;
+    }
+
+    strong {
+      color: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      margin: 20px 0;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    table, th, td {
+      border: 1px solid #0ae4e4;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: rgba(10, 228, 228, 0.1);
+      color: white;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+    }
+
+    /* Technical UI elements */
+    .data-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .data-stat {
+      padding: 8px 12px;
+      background: rgba(10, 228, 228, 0.05);
+      border: 1px solid #0ae4e4;
+      min-width: 100px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    /* Terminal output styling */
+    .terminal-output {
+      background: #000;
+      color: #0ae4e4;
+      padding: 10px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      margin: 10px 0;
+      border-left: 3px solid #0ae4e4;
+      font-size: 0.8rem;
+      min-height: 100px; /* Give it some minimum height */
+      max-height: 200px; /* Prevent it from getting too tall */
+      overflow-y: auto; /* Allow scrolling if content exceeds max-height */
+    }
+
+    /* Scanning animation */
+    .scan-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #0ae4e4, transparent);
+      animation: scan 4s linear infinite;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.5;
+    }
+
+    @keyframes scan {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+
+    @media (max-width: 1200px) {
+      .main-container {
+        flex-direction: column;
+        height: auto; /* Allow height to adjust */
+      }
+
+      .visualization-container, .content-container {
+        width: 100%;
+        height: 50vh; /* Give them a default height in column mode */
+      }
+
+      .content-container {
+         height: auto; /* Content can determine its height */
+         min-height: 40vh; /* Ensure some minimum height */
+         border-right: none; /* Remove border */
+         border-top: 1px solid #0ae4e4; /* Add border between sections */
+      }
+
+      #visualization {
+        height: 100%; /* Fill the container */
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Scan line animation -->
+  <div class="scan-line"></div>
+
+  <div class="main-container">
+    <!-- Dashboard header -->
+    <div class="dashboard-header">
+       <h1>The Hyper-Continuum Flow</h1>
+       <div class="dashboard-status">
+         <div class="status-item">
+           <div class="status-indicator"></div>
+           <span>SYSTEM ACTIVE</span>
+         </div>
+         <div class="status-item">ID: HCF-3D-TORUS-v2.8</div> <!-- Version Bump -->
+         <div class="status-item">T+<span id="runtime">00:00:00</span></div>
+       </div>
+     </div>
+
+    <!-- Visualization Section (Left Side) -->
+    <div class="visualization-container">
+      <div id="container">
+        <div id="visualization">
+          <!-- SVG added via script -->
+          <div class="overlay-controls">
+            <button id="overlay-rotate-left" class="rotate-btn">↺</button>
+            <button id="overlay-zoom-out" class="zoom-btn">−</button>
+            <button id="overlay-zoom-in" class="zoom-btn">+</button>
+            <button id="overlay-rotate-right" class="rotate-btn">↻</button>
+          </div>
+        </div>
+
+        <div class="control-panel">
+          <div class="control-group">
+            <label>Ordinal Scale α→ω<sub>1</sub>: <span id="alpha-value">1.5</span></label>
+            <input type="range" id="alpha" min="0.5" max="3.0" step="0.1" value="1.5">
+          </div>
+          <div class="control-group">
+            <label>Surprisal S<sub>θ</sub>: <span id="beta-value">0.2</span></label>
+            <input type="range" id="beta" min="0.05" max="0.5" step="0.05" value="0.2">
+          </div>
+          <div class="control-group">
+            <label>Terms: <span id="terms-value">6</span></label>
+            <input type="range" id="terms" min="2" max="8" step="1" value="6">
+          </div>
+          <div class="control-group">
+            <label>Filaments: <span id="particles-value">3000</span></label>
+            <input type="range" id="particles" min="1000" max="10000" step="1000" value="3000">
+          </div>
+          <div class="control-group">
+            <label>Phase Width: <span id="width-value">0.5</span></label>
+            <input type="range" id="line-width" min="0.2" max="2.0" step="0.1" value="0.5">
+          </div>
+          <div class="control-group">
+             <label>Speed: <span id="speed-value">1.0</span></label>
+             <input type="range" id="animation-speed" min="0.1" max="5.0" step="0.1" value="1.0">
+          </div>
+          <div class="control-group">
+            <label>Actions</label>
+            <div class="action-buttons">
+              <button id="rotate-left" class="rotate-btn">↺</button>
+              <button id="reset-transform" class="zoom-btn">RESET</button>
+              <button id="rotate-right" class="rotate-btn">↻</button>
+              <button id="zoom-out" class="zoom-btn">−</button>
+              <button id="zoom-in" class="zoom-btn">+</button>
+              <button id="toggle-btn">INITIALIZE</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-display">
+          <span id="transform-info">ROTATION: 0° | ZOOM: 1.0× | COORDS: 0.00,0.00,0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Section (Right Side) -->
+    <div class="content-container">
+       <div class="data-stats">
+         <div class="data-stat">
+           <div class="stat-label">Phase Coherence</div>
+           <div class="stat-value">92.7%</div>
+         </div>
+         <div class="data-stat">
+           <div class="stat-label">Entropy</div>
+           <div class="stat-value">1.054</div>
+         </div>
+         <div class="data-stat">
+           <div class="stat-label">Convergence</div>
+           <div class="stat-value">0.998</div>
+         </div>
+       </div>
+
+       <div class="section-header">
+         <h2>HYPER-CONTINUUM FORMULA</h2>
+       </div>
+
+       <div class="math-formula">
+         E := lim<sub>α→ω<sub>1</sub></sub> (E<sub>τ∈T<sup>α</sup></sub> exp[<i>i</i> S<sub>θ</sub>(τ)])<sup>1/ℶ<sub>α</sub></sup> = 1
+       </div>
+
+       <div class="section-header">
+         <h3>CONCEPTUAL PARAMETERS</h3>
+       </div>
+
+       <table>
+         <thead>
+           <tr>
+             <th>Symbol</th>
+             <th>Definition</th>
+           </tr>
+         </thead>
+         <tbody>
+           <tr>
+             <td>T<sup>α</sup></td>
+             <td>Token-sequences with length of ordinal α</td>
+           </tr>
+           <tr>
+             <td>S<sub>θ</sub>(τ)</td>
+             <td>Surprisal action: -log P(τ|θ)</td>
+           </tr>
+           <tr>
+             <td>exp[<i>i</i> S<sub>θ</sub>]</td>
+             <td>Phase factor for path interference</td>
+           </tr>
+           <tr>
+             <td>ℶ<sub>α</sub></td>
+             <td>α-th Beth cardinal (normalizing factor)</td>
+           </tr>
+           <tr>
+             <td>ω<sub>1</sub></td>
+             <td>First uncountable ordinal</td>
+           </tr>
+         </tbody>
+       </table>
+
+       <div class="section-header">
+         <h3>SYSTEM INTERPRETATION</h3>
+       </div>
+
+       <p>All dialogue sequences superposed with their probabilistic weights create a hyper-dimensional interference pattern. Phase cancellations occur on a scale beyond human conception, but following Beth-cardinality normalization, the system stabilizes at unity value.</p>
+
+       <div class="terminal-output">SYSTEM LOG:
+ </div> <!-- Initial content added via script -->
+
+       <p>The 3D torus visualization represents a dimensional reduction of the formula's phase space. The wireframe shows the underlying manifold structure, while each particle traces a path of semantic coherence through the normalized probability field.</p> <!-- Updated description -->
+
+       <div class="section-header">
+         <h3>OPERATIONAL NOTES</h3>
+       </div>
+
+       <ul>
+         <li>Increasing α parameter expands the ordinal horizon</li>
+         <li>Higher surprisal values (S<sub>θ</sub>) intensify phase oscillations</li>
+         <li>Additional interference terms reveal finer structure</li>
+         <li>Wireframe rotation illustrates the phase space topology</li> <!-- Added note -->
+         <li>Complete convergence occurs as all paths are superposed</li>
+       </ul>
+     </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // --- Runtime Counter (no changes) ---
+      const runtimeElement = document.getElementById('runtime');
+      let seconds = 0;
+      const timerInterval = setInterval(() => {
+        seconds++;
+        const hours = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        const minutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        if (runtimeElement) {
+            runtimeElement.textContent = `${hours}:${minutes}:${secs}`;
+        } else {
+            clearInterval(timerInterval);
+        }
+      }, 1000);
+
+      // --- Configuration (no changes) ---
+      let config = {
+        alpha: 1.5,
+        beta: 0.2,
+        terms: 6,
+        particleCount: 3000,
+        lineWidth: 0.5,
+        isAnimating: false,
+        animationSpeed: 1.0,
+        rotation: 0,
+        zoomFactor: 1.0,
+        centerX: 0,
+        centerY: 0,
+        majorRadius: 4,
+        minorRadius: 1.5
+      };
+
+      // --- D3 Setup ---
+      const visualizationDiv = document.getElementById("visualization");
+      let width = visualizationDiv.clientWidth;
+      let height = visualizationDiv.clientHeight;
+
+      const svg = d3.select("#visualization")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .style("background-color", "#000"); // Ensure SVG background is black
+
+      // Main group for transformations
+      const mainGroup = svg.append("g")
+        .attr("transform-origin", `${width/2} ${height/2}`);
+
+      // Group specifically for the Torus Wireframe (drawn first/behind)
+      const torusGroup = mainGroup.append("g")
+        .attr("class", "torus-wireframe");
+
+      // Group for particles (drawn on top of torus)
+      const particleGroup = mainGroup.append("g")
+          .attr("class", "particles");
+
+      // --- State Variables ---
+      let particles = [];
+      let torusWireframe = { latitudes: [], longitudes: [] }; // Store wireframe data
+      let sceneRotationAngle = 0; // Single angle for rotating the whole scene (torus + particles)
+      let animationRef;
+
+      // --- Helper Functions ---
+
+      // 3D Rotation (around Y-axis) - unchanged
+      function rotate3D(x, y, z, angleY) {
+        const cosA = Math.cos(angleY);
+        const sinA = Math.sin(angleY);
+        const xPrime = x * cosA + z * sinA;
+        const yPrime = y;
+        const zPrime = -x * sinA + z * cosA;
+        return { x: xPrime, y: yPrime, z: zPrime };
+      }
+
+      // 3D to 2D Projection (Orthographic) - unchanged
+      function projectTo2D(x, y, z) {
+        const scale = 70; // Adjust scale factor as needed
+        return {
+          x2d: x * scale,
+          y2d: -y * scale
+        };
+      }
+
+      // Generate a random point on the torus surface - unchanged
+      function randomTorusPosition() {
+        const u = Math.random() * Math.PI * 2;
+        const v = Math.random() * Math.PI * 2;
+        const R = config.majorRadius;
+        const r = config.minorRadius;
+        const cosU = Math.cos(u);
+        const sinU = Math.sin(u);
+        const cosV = Math.cos(v);
+        const sinV = Math.sin(v);
+        const x = (R + r * cosV) * cosU;
+        const y = (R + r * cosV) * sinU;
+        const z = r * sinV;
+        return {x, y, z};
+      }
+
+      // Generate particle data - unchanged
+      function generateParticles() {
+        particles = [];
+        for (let i = 0; i < config.particleCount; i++) {
+          const pos = randomTorusPosition();
+          const vx = (Math.random() - 0.5) * 0.02;
+          const vy = (Math.random() - 0.5) * 0.02;
+          const vz = (Math.random() - 0.5) * 0.02;
+          const phaseValue = ((Math.atan2(pos.y, pos.x) / Math.PI) + 1) * 0.5;
+          const hue = 170 + phaseValue * 40;
+          const saturation = 80 + Math.random() * 20;
+          const lightness = 50 + Math.random() * 20;
+          const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+          particles.push({
+            id: i, x: pos.x, y: pos.y, z: pos.z, vx, vy, vz, color,
+            trail: [{ x: pos.x, y: pos.y, z: pos.z }],
+            trailLength: 20 + Math.floor(Math.random() * 40),
+            age: 0, lifespan: 200 + Math.random() * 300,
+            phase: (i / config.particleCount) * Math.PI * 2
+          });
+        }
+      }
+
+      // *** NEW: Generate Torus Wireframe Data ***
+      function generateTorusWireframeData(numLatLines = 12, numLonLines = 18, pointsPerLine = 36) {
+          torusWireframe = { latitudes: [], longitudes: [] };
+          const R = config.majorRadius;
+          const r = config.minorRadius;
+
+          // Latitudes (circles around the tube)
+          for (let i = 0; i < numLatLines; i++) {
+              const u = (i / numLatLines) * Math.PI * 2; // Constant angle around main ring
+              const cosU = Math.cos(u);
+              const sinU = Math.sin(u);
+              const linePoints = [];
+              for (let j = 0; j <= pointsPerLine; j++) { // <= to close the loop
+                  const v = (j / pointsPerLine) * Math.PI * 2; // Angle around tube
+                  const cosV = Math.cos(v);
+                  const sinV = Math.sin(v);
+                  const x = (R + r * cosV) * cosU;
+                  const y = (R + r * cosV) * sinU;
+                  const z = r * sinV;
+                  linePoints.push({ x, y, z });
+              }
+              torusWireframe.latitudes.push(linePoints);
+          }
+
+          // Longitudes (circles around the main hole)
+          for (let i = 0; i < numLonLines; i++) {
+              const v = (i / numLonLines) * Math.PI * 2; // Constant angle around tube
+              const cosV = Math.cos(v);
+              const sinV = Math.sin(v);
+              const linePoints = [];
+              for (let j = 0; j <= pointsPerLine; j++) { // <= to close the loop
+                  const u = (j / pointsPerLine) * Math.PI * 2; // Angle around main ring
+                  const cosU = Math.cos(u);
+                  const sinU = Math.sin(u);
+                  const x = (R + r * cosV) * cosU;
+                  const y = (R + r * cosV) * sinU;
+                  const z = r * sinV;
+                  linePoints.push({ x, y, z });
+              }
+              torusWireframe.longitudes.push(linePoints);
+          }
+      }
+
+      // Compute the 3D vector field - minor safety improvement
+      function computeFieldValue3D(x, y, z) {
+        const r = Math.sqrt(x*x + y*y + z*z);
+        // Add small epsilon to prevent issues if r is exactly 0 or for pow(r, negative)
+        const rSafe = r + 1e-6;
+        const theta = Math.atan2(Math.sqrt(x*x+y*y), z);
+        const phi   = Math.atan2(y, x);
+        let fieldX = 0, fieldY = 0, fieldZ = 0;
+        let phaseAccumulator = 0;
+
+        for (let n = 1; n <= config.terms; n++) {
+          const amplitude = Math.exp(-config.beta * Math.pow(rSafe, n / config.alpha));
+          const termPhase = config.alpha * (
+             Math.sin(n * phi * config.beta * 5) * Math.pow(rSafe, 1/n) +
+             Math.cos(n * theta / config.alpha) * Math.pow(rSafe, n/3)
+          );
+          phaseAccumulator += termPhase / n;
+          fieldX += amplitude * Math.cos(phaseAccumulator * config.beta * 10);
+          fieldY += amplitude * Math.sin(phaseAccumulator * config.alpha * 5);
+          fieldZ += amplitude * Math.cos(phaseAccumulator + Math.PI / 2);
+        }
+
+        const scalingFactor = Math.max(0.01, 1 / (1 + Math.pow(rSafe, config.alpha / 3)));
+        fieldX *= scalingFactor;
+        fieldY *= scalingFactor;
+        fieldZ *= scalingFactor;
+
+        const magnitude = Math.sqrt(fieldX*fieldX + fieldY*fieldY + fieldZ*fieldZ);
+         if (magnitude > 1) {
+          fieldX /= magnitude; fieldY /= magnitude; fieldZ /= magnitude;
+        }
+        // Inward pull if far - Use particle coords (available in updateParticles)
+        // Removed from here as it needs particle context.
+
+        return {x: fieldX, y: fieldY, z: fieldZ};
+      }
+
+      // Update particle positions - unchanged from previous corrected version
+      function updateParticles() {
+        particles.forEach((particle, i) => {
+          const field = computeFieldValue3D(particle.x, particle.y, particle.z);
+          const r = Math.sqrt(particle.x**2 + particle.y**2 + particle.z**2);
+          const acceleration = 0.01 * config.animationSpeed;
+          particle.phase += 0.01 * config.animationSpeed * (1 / (1 + r));
+          const phaseEffect = Math.sin(particle.phase * config.alpha);
+
+          particle.vx += field.x * acceleration * (1 + 0.3 * phaseEffect);
+          particle.vy += field.y * acceleration * (1 + 0.3 * phaseEffect);
+          particle.vz += field.z * acceleration * (1 + 0.3 * phaseEffect);
+
+          // Add inward pull here if particle is far out
+          if (r > (config.majorRadius + config.minorRadius * 2)) {
+             particle.vx -= particle.x * 0.0005 * config.animationSpeed;
+             particle.vy -= particle.y * 0.0005 * config.animationSpeed;
+             particle.vz -= particle.z * 0.0005 * config.animationSpeed;
+          }
+
+          const damping = 0.97 + 0.02 * Math.min(1, r / (config.majorRadius * 2));
+          particle.vx *= damping; particle.vy *= damping; particle.vz *= damping;
+
+          const speed = Math.sqrt(particle.vx**2 + particle.vy**2 + particle.vz**2);
+          const maxSpeed = 0.5 * config.animationSpeed;
+          if (speed > maxSpeed) {
+            particle.vx = (particle.vx / speed) * maxSpeed;
+            particle.vy = (particle.vy / speed) * maxSpeed;
+            particle.vz = (particle.vz / speed) * maxSpeed;
+          }
+
+          particle.x += particle.vx; particle.y += particle.vy; particle.z += particle.vz;
+
+          particle.trail.push({ x: particle.x, y: particle.y, z: particle.z });
+          if (particle.trail.length > particle.trailLength) particle.trail.shift();
+
+          particle.age += 1;
+          const resetBoundary = config.majorRadius * 5;
+          if (particle.age > particle.lifespan ||
+              Math.abs(particle.x) > resetBoundary || Math.abs(particle.y) > resetBoundary || Math.abs(particle.z) > resetBoundary ||
+              (particle.age > 50 && speed < 0.001 * config.animationSpeed)) { // Scale speed threshold
+            const pos = randomTorusPosition();
+            particle.x = pos.x; particle.y = pos.y; particle.z = pos.z;
+            const vMag = 0.01 + Math.random() * 0.01;
+            const fNew = computeFieldValue3D(pos.x, pos.y, pos.z);
+            particle.vx = fNew.x * vMag; particle.vy = fNew.y * vMag; particle.vz = fNew.z * vMag;
+            particle.trail = [{x: particle.x, y: particle.y, z: particle.z}];
+            particle.age = 0; particle.lifespan = 200 + Math.random() * 300;
+            particle.phase = (i / config.particleCount) * Math.PI * 2;
+            const phaseValue = ((Math.atan2(particle.y, particle.x) / Math.PI) + 1) * 0.5;
+            const hue = 170 + phaseValue * 40;
+            const saturation = 80 + Math.random() * 20;
+            const lightness = 50 + Math.random() * 20;
+            particle.color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+          }
+        });
+      }
+
+      // D3 line generator - unchanged
+      const lineGenerator = d3.line()
+        .x(d => d.x2d + width/2)
+        .y(d => d.y2d + height/2)
+        .curve(d3.curveBasis);
+
+      // Create static grid lines - REMOVED (replaced by torus wireframe)
+      // function createGrid() { ... } // No longer needed
+
+       // *** UPDATED: Draw Torus Wireframe AND Particles ***
+       function drawScene() {
+           // --- Draw Torus Wireframe ---
+           const wireframeColor = "rgba(10, 228, 228, 0.2)"; // Dimmer color for wireframe
+           const wireframeStrokeWidth = 0.5;
+
+           const allLinesData = torusWireframe.latitudes.concat(torusWireframe.longitudes);
+
+           torusGroup.selectAll("path.wireframe-line")
+               .data(allLinesData)
+               .join("path")
+               .attr("class", "wireframe-line")
+               .attr("fill", "none")
+               .attr("stroke", wireframeColor)
+               .attr("stroke-width", wireframeStrokeWidth)
+               .attr("stroke-opacity", 0.5) // Make it semi-transparent
+               .attr("d", linePoints => {
+                   if (!linePoints || linePoints.length < 2) return null;
+                   // Project each point in the wireframe line after applying scene rotation
+                   const projectedLine = linePoints.map(pt => {
+                       const rotated = rotate3D(pt.x, pt.y, pt.z, sceneRotationAngle);
+                       return projectTo2D(rotated.x, rotated.y, rotated.z);
+                   });
+                   return lineGenerator(projectedLine);
+               });
+
+           // --- Draw Particles ---
+           // Update info display
+           let sampleCoords = "0.00,0.00,0.00";
+           if (particles.length > 0 && particles[0].trail.length > 0) {
+               const lastPoint = particles[0].trail[particles[0].trail.length - 1];
+               sampleCoords = `${lastPoint.x.toFixed(2)},${lastPoint.y.toFixed(2)},${lastPoint.z.toFixed(2)}`;
+           }
+           const transformInfoElement = document.getElementById('transform-info');
+           if (transformInfoElement) {
+               transformInfoElement.textContent =
+               `ROTATION: ${config.rotation}° | ZOOM: ${config.zoomFactor.toFixed(1)}× | COORDS: ${sampleCoords}`;
+           }
+
+           // Glow filter definition (ensure it's within the main group)
+           const defs = particleGroup.select("defs").size() ? particleGroup.select("defs") : particleGroup.append("defs");
+           if (!defs.select("#glow").size()) {
+               const filter = defs.append("filter")
+                   .attr("id", "glow").attr("x", "-50%").attr("y", "-50%").attr("width", "200%").attr("height", "200%");
+               filter.append("feGaussianBlur").attr("stdDeviation", "2.0").attr("result", "coloredBlur");
+               const feMerge = filter.append("feMerge");
+               feMerge.append("feMergeNode").attr("in", "coloredBlur");
+               feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+           }
+
+           // Draw particle trails
+           particleGroup.selectAll(".particle-trail")
+               .data(particles, d => d.id)
+               .join(
+                   enter => enter.append("path")
+                       .attr("class", "particle-trail")
+                       .attr("fill", "none")
+                       .attr("stroke-opacity", 0.6)
+                       .attr("filter", "url(#glow)"),
+                   update => update,
+                   exit => exit.remove()
+               )
+               .attr("stroke", d => d.color)
+               .attr("stroke-width", config.lineWidth)
+               .attr("d", d => {
+                   if (d.trail.length < 2) return null;
+                   const projectedTrail = d.trail.map(pt => {
+                       const rotated = rotate3D(pt.x, pt.y, pt.z, sceneRotationAngle);
+                       return projectTo2D(rotated.x, rotated.y, rotated.z);
+                   });
+                   return lineGenerator(projectedTrail);
+               });
+
+           // Draw particle heads
+           particleGroup.selectAll(".data-point")
+               .data(particles, d => d.id)
+               .join(
+                   enter => enter.append("circle")
+                       .attr("class", "data-point")
+                       .attr("r", 1.5),
+                   update => update,
+                   exit => exit.remove()
+               )
+               .attr("fill", d => d.color)
+               .attr("cx", d => {
+                   if (d.trail.length === 0) return width / 2;
+                   const lastPoint = d.trail[d.trail.length - 1];
+                   const rotated = rotate3D(lastPoint.x, lastPoint.y, lastPoint.z, sceneRotationAngle);
+                   const projected = projectTo2D(rotated.x, rotated.y, rotated.z);
+                   return projected.x2d + width / 2;
+               })
+               .attr("cy", d => {
+                   if (d.trail.length === 0) return height / 2;
+                   const lastPoint = d.trail[d.trail.length - 1];
+                   const rotated = rotate3D(lastPoint.x, lastPoint.y, lastPoint.z, sceneRotationAngle);
+                   const projected = projectTo2D(rotated.x, rotated.y, rotated.z);
+                   return projected.y2d + height / 2;
+               });
+       }
+
+
+      // Update the main SVG group's transform - unchanged
+      function updateTransform() {
+          mainGroup.attr("transform-origin", `${width/2} ${height/2}`);
+          mainGroup.attr("transform",
+              `translate(${width/2 + config.centerX}, ${height/2 + config.centerY})
+               rotate(${config.rotation})
+               scale(${config.zoomFactor})
+               translate(${-width/2}, ${-height/2})`
+          );
+          const transformInfoElement = document.getElementById('transform-info');
+           let sampleCoords = "0.00,0.00,0.00";
+             if (particles.length > 0 && particles[0].trail.length > 0) {
+                 const lastPoint = particles[0].trail[particles[0].trail.length - 1];
+                 sampleCoords = `${lastPoint.x.toFixed(2)},${lastPoint.y.toFixed(2)},${lastPoint.z.toFixed(2)}`;
+             }
+          if (transformInfoElement) {
+            transformInfoElement.textContent =
+              `ROTATION: ${config.rotation}° | ZOOM: ${config.zoomFactor.toFixed(1)}× | COORDS: ${sampleCoords}`;
+          }
+      }
+
+
+      // Simulate system startup messages - unchanged
+      function runStartupSequence() {
+        const terminalOutput = document.querySelector('.terminal-output');
+        if (terminalOutput) {
+          let lines = [];
+          const messages = [ /* ... keep existing messages ... */
+            "> Booting Hyper-Continuum Kernel v2.8...", // Version bump
+            "> Initializing hyper-toroidal manifold wireframe...", // Updated message
+            "> Generating base topological structure...",
+            "> Calibrating ordinal scale parameters: α=" + config.alpha.toFixed(1),
+            "> Setting surprisal intensity: S_θ ~ " + config.beta.toFixed(2),
+            "> Propagating " + config.particleCount + " dialogue filaments...",
+            "> Computing interference patterns (terms=" + config.terms + ")...",
+            "> Engaging observer effect compensation...",
+            "> Stabilizing phase coherence...",
+            "> Normalizing via Beth-cardinality scaling...",
+            "> SYSTEM ONLINE. VISUALIZING FLOW.", // Updated message
+            "> Rendering dimensional projection..."
+           ];
+          let i = 0;
+          terminalOutput.textContent = "SYSTEM LOG:\n";
+          const typeInterval = setInterval(() => {
+            if (i < messages.length) {
+              lines.push(messages[i]);
+              terminalOutput.textContent = "SYSTEM LOG:\n" + lines.join("\n");
+              terminalOutput.scrollTop = terminalOutput.scrollHeight;
+              i++;
+            } else {
+              clearInterval(typeInterval);
+                const phaseCoherence = 90 + Math.random() * 5;
+                const entropyValue = 1 + Math.random() * 0.1;
+                const convergenceValue = 0.99 + Math.random() * 0.01;
+                const statsElements = document.querySelectorAll('.stat-value');
+                if (statsElements.length >= 3) {
+                statsElements[0].textContent = phaseCoherence.toFixed(1) + '%';
+                statsElements[1].textContent = entropyValue.toFixed(3);
+                statsElements[2].textContent = convergenceValue.toFixed(3);
+                }
+            }
+          }, 250); // Slightly faster typing
+        }
+      }
+
+      // *** UPDATED: Main animation loop ***
+      function animate() {
+        if (!config.isAnimating) return; // Stop if paused
+
+        // Rotate the 3D scene (torus + particles)
+        sceneRotationAngle += 0.005 * config.animationSpeed; // Increased rotation speed
+
+        updateParticles(); // Calculate new particle positions
+        drawScene();       // Render TORUS and PARTICLES to SVG
+
+        // Update dashboard stats periodically - unchanged
+        if (Math.random() < 0.1) {
+          const phaseCoherence = 91 + Math.random() * 4;
+          const entropyValue = 1.02 + Math.random() * 0.05;
+          const convergenceValue = 0.995 + Math.random() * 0.004;
+          const statsElements = document.querySelectorAll('.stat-value');
+          if (statsElements.length >= 3) {
+            statsElements[0].textContent = phaseCoherence.toFixed(1) + '%';
+            statsElements[1].textContent = entropyValue.toFixed(3);
+            statsElements[2].textContent = convergenceValue.toFixed(3);
+          }
+        }
+
+        // VERY IMPORTANT: Ensure the loop continues
+        try {
+            animationRef = requestAnimationFrame(animate);
+        } catch (e) {
+            console.error("Animation loop failed:", e);
+            // Optionally try to restart or notify the user
+            config.isAnimating = false; // Stop trying if it failed
+            const btn = document.getElementById('toggle-btn');
+            if(btn) {
+                 btn.textContent = 'ERROR - RELOAD';
+                 btn.classList.remove('pause-btn');
+                 btn.style.borderColor = 'red';
+                 btn.style.color = 'red';
+            }
+        }
+      }
+
+      // Toggle animation state - Modified to generate wireframe on first run
+      function toggleAnimation() {
+        const btn = document.getElementById('toggle-btn');
+        const wasFirstRun = !config.isAnimating && !animationRef;
+
+        config.isAnimating = !config.isAnimating;
+
+        if (config.isAnimating) {
+          btn.textContent = 'PAUSE SYSTEM';
+          btn.classList.add('pause-btn');
+          // Reset error style if present
+          btn.style.borderColor = ''; btn.style.color = '';
+
+          if (wasFirstRun) {
+             generateParticles();
+             generateTorusWireframeData(); // Generate wireframe on first start
+             drawScene(); // Draw initial state
+             runStartupSequence();
+          }
+          // Ensure animationRef is cleared before starting a new one
+          if (animationRef) cancelAnimationFrame(animationRef);
+          animationRef = null; // Clear explicitly
+          animate(); // Start the loop
+        } else {
+          btn.textContent = 'RESUME';
+          btn.classList.remove('pause-btn');
+          if (animationRef) {
+            cancelAnimationFrame(animationRef);
+            animationRef = null; // Clear reference
+          }
+        }
+      }
+
+      // Handle 2D rotation control - Redraw if paused
+      function handleRotate(deg) {
+        config.rotation = (config.rotation + deg) % 360;
+        updateTransform();
+        if (!config.isAnimating) drawScene(); // Use drawScene
+      }
+
+      // Handle zoom control - Redraw if paused
+      function handleZoom(factor) {
+        config.zoomFactor = Math.max(0.1, Math.min(20, config.zoomFactor * factor));
+        updateTransform();
+         if (!config.isAnimating) drawScene(); // Use drawScene
+      }
+
+      // Reset pan, zoom, and rotation - Redraw if paused
+      function resetTransform() {
+        config.rotation = 0;
+        config.zoomFactor = 1.0;
+        config.centerX = 0;
+        config.centerY = 0;
+        updateTransform();
+         if (!config.isAnimating) drawScene(); // Use drawScene
+      }
+
+      // --- UI Setup and Event Listeners ( Largely Unchanged ) ---
+      function setupControls() {
+        // Sliders
+        const alphaSlider = document.getElementById('alpha');
+        const alphaValue = document.getElementById('alpha-value');
+        alphaSlider.addEventListener('input', function() {
+          config.alpha = parseFloat(this.value);
+          alphaValue.textContent = config.alpha.toFixed(1);
+          // No redraw needed here if animating, field changes affect next frame
+        });
+
+        const betaSlider = document.getElementById('beta');
+        const betaValue = document.getElementById('beta-value');
+        betaSlider.addEventListener('input', function() {
+          config.beta = parseFloat(this.value);
+          betaValue.textContent = config.beta.toFixed(2);
+        });
+
+        const termsSlider = document.getElementById('terms');
+        const termsValue = document.getElementById('terms-value');
+        termsSlider.addEventListener('input', function() {
+          config.terms = parseInt(this.value);
+          termsValue.textContent = config.terms;
+        });
+
+        const particlesSlider = document.getElementById('particles');
+        const particlesValue = document.getElementById('particles-value');
+        particlesSlider.addEventListener('input', function() {
+          config.particleCount = parseInt(this.value);
+          particlesValue.textContent = config.particleCount;
+          const wasAnimating = config.isAnimating;
+          if (wasAnimating) toggleAnimation(); // Pause
+          generateParticles();                 // Regenerate particles only
+          if (wasAnimating) toggleAnimation(); // Resume
+          else drawScene();                    // Draw new state if paused
+        });
+
+        const widthSlider = document.getElementById('line-width');
+        const widthValue = document.getElementById('width-value');
+        widthSlider.addEventListener('input', function() {
+          config.lineWidth = parseFloat(this.value);
+          widthValue.textContent = config.lineWidth.toFixed(1);
+          if (!config.isAnimating) drawScene(); // Update line width if paused
+        });
+
+        const speedSlider = document.getElementById('animation-speed');
+        const speedValue = document.getElementById('speed-value');
+        if (speedSlider && speedValue) {
+            speedSlider.addEventListener('input', function() {
+                config.animationSpeed = parseFloat(this.value);
+                speedValue.textContent = config.animationSpeed.toFixed(1);
+            });
+        }
+
+        // Buttons (event listeners remain the same)
+        document.getElementById('toggle-btn').addEventListener('click', toggleAnimation);
+        document.getElementById('rotate-left').addEventListener('click', () => handleRotate(-15));
+        document.getElementById('rotate-right').addEventListener('click', () => handleRotate(15));
+        document.getElementById('overlay-rotate-left').addEventListener('click', () => handleRotate(-15));
+        document.getElementById('overlay-rotate-right').addEventListener('click', () => handleRotate(15));
+        document.getElementById('zoom-in').addEventListener('click', () => handleZoom(1.25));
+        document.getElementById('zoom-out').addEventListener('click', () => handleZoom(0.8));
+        document.getElementById('overlay-zoom-in').addEventListener('click', () => handleZoom(1.25));
+        document.getElementById('overlay-zoom-out').addEventListener('click', () => handleZoom(0.8));
+        document.getElementById('reset-transform').addEventListener('click', resetTransform);
+
+        // Mouse Drag for Panning (remains the same)
+        let isDragging = false;
+        let startX, startY;
+        let dragStartCenterX, dragStartCenterY;
+        svg.on("mousedown", function(event) {
+           if (event.button !== 0) return;
+          event.preventDefault(); isDragging = true;
+          startX = event.clientX; startY = event.clientY;
+          dragStartCenterX = config.centerX; dragStartCenterY = config.centerY;
+          svg.style("cursor", "grabbing");
+        });
+        svg.on("mousemove", function(event) {
+          if (!isDragging) return;
+          event.preventDefault();
+          const dx = (event.clientX - startX); const dy = (event.clientY - startY);
+          config.centerX = dragStartCenterX + dx; config.centerY = dragStartCenterY + dy;
+          updateTransform();
+           if (!config.isAnimating) drawScene();
+        });
+        d3.select(window).on("mouseup.drag", function(event) {
+          if (!isDragging || event.button !== 0) return;
+          isDragging = false; svg.style("cursor", "default");
+        });
+        d3.select(window).on("mouseleave.drag", function(event) {
+            if ((event.relatedTarget === null || event.relatedTarget.nodeName === 'HTML') && isDragging) {
+                 isDragging = false; svg.style("cursor", "default");
+            }
+        });
+
+        // Mouse Wheel for Zooming (remains the same)
+        svg.on("wheel", function(event) {
+            event.preventDefault();
+            const zoomFactor = event.deltaY < 0 ? 1.15 : 1 / 1.15;
+            handleZoom(zoomFactor);
+        });
+      }
+
+      // --- Initialization ---
+
+      // Startup blinking effect (remains the same)
+      const dashboardHeader = document.querySelector('.dashboard-header');
+      if (dashboardHeader) {
+        dashboardHeader.style.opacity = 0;
+        setTimeout(() => {
+          let opacity = 0; let direction = 1; let flickerCount = 0;
+          const maxFlickers = 5;
+          const flickerInterval = setInterval(() => {
+            opacity += (Math.random() * 0.3) * direction;
+            if (opacity > 1) { opacity = 1; direction = -1; flickerCount++; }
+            else if (opacity < 0) { opacity = 0; direction = 1; flickerCount++; }
+            dashboardHeader.style.opacity = opacity;
+            if (flickerCount > maxFlickers) { clearInterval(flickerInterval); dashboardHeader.style.opacity = 1; }
+          }, 60);
+        }, 700);
+      }
+
+      // Initial setup calls
+      generateParticles();           // Create initial particle data
+      generateTorusWireframeData();  // Create the torus wireframe data
+      updateTransform();             // Set initial SVG transform
+      setupControls();               // Attach listeners
+      drawScene();                   // Draw the initial state (torus + particles)
+
+      // Handle window resize
+      window.addEventListener('resize', function() {
+        width = visualizationDiv.clientWidth;
+        height = visualizationDiv.clientHeight;
+        svg.attr("width", width).attr("height", height).attr("viewBox", `0 0 ${width} ${height}`);
+        lineGenerator.x(d => d.x2d + width/2).y(d => d.y2d + height/2);
+        updateTransform();
+        if (!config.isAnimating) {
+          drawScene(); // Redraw torus and particles
+        }
+      });
+
+    }); // <-- END of DOMContentLoaded listener
+  </script>
+
+</body>
+</html>
