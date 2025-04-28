@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>_*Hyper*_Continuum</title>
+    <title>Numerical Poetry - _*Hyper*_Continuum</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=VT323&display=swap" rel="stylesheet">
@@ -245,13 +245,6 @@
         }
 
         .content-section {
-            display: none;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-
-        .content-section.active {
             display: block;
             opacity: 1;
             transform: translateY(0);
@@ -269,18 +262,17 @@
         .content-description {
             line-height: 1.6;
             margin-bottom: 1.5rem;
-            max-width: 800px; /* Adjust this value as needed */
+            max-width: 900px; /* Adjust this value as needed */
             margin: 0 auto; /* Center the content */
             padding: 0 20px; /* Add some padding on the sides */
         }
 
-  
         /* Make quotations stand out */
         .content-description em {
             display: inline-block;
             background-color: rgba(2, 12, 5, 0.041);
             color: var(--highlight);
-            padding: 0.2rem 0.5rem;
+            padding: 0.2rem 0.1rem;
             margin-right: 0.5rem;
             margin-bottom: 0.5rem;
             font-size: 1.1rem;
@@ -309,22 +301,6 @@
             background-color: rgba(0, 255, 65, 0.1);
             border-color: var(--matrix-green);
             transform: translateY(-2px);
-        }
-
-        .content-action::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background: linear-gradient(to right, transparent, rgba(0, 255, 65, 0.2), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .content-action:hover::after {
-            opacity: 1;
         }
 
         .content-action::after {
@@ -500,12 +476,11 @@
         <nav class="sidebar">
             <h2>Navigation</h2>
             
-            
             <div class="topic-group">
-                <div class="topic-title" data-target="intelligence">Intelligence</div>
-                <div class="subtopics" id="intelligence-subtopics">
+                <div class="topic-title active" data-target="intelligence">Intelligence</div>
+                <div class="subtopics active" id="intelligence-subtopics">
                     <div class="subtopic"><a href="WhatMachinesThink.html">What machines think</a> <span class="active-indicator"></span></div>
-                    <div class="subtopic"><a href="NumericalPoems.html">Numerical poetry</a> <span class="active-indicator"></span></div>
+                    <div class="subtopic active"><a href="NumericalPoems.html">Numerical poetry</a> <span class="active-indicator"></span></div>
                 </div>
             </div>
             
@@ -525,72 +500,95 @@
         </nav>
         
         <main class="content">
-            <section class="content-section active" id="welcome-content">
-                <h2 class="content-title">Welcome</h2>
+            <section class="content-section" id="intelligence">
+                <h2 class="content-title">Numerical Poetry</h2>
                 <div class="content-description">
-                    <p>This digital repository houses experimental projects, theoretical frameworks, and speculative research across disciplines.</p>
-                    
-                    <div class="equation">
-                        E := lim<sub>α→ω<sub>1</sub></sub> (E<sub>τ∈T<sup>α</sup></sub> exp[<i>i</i> S<sub>θ</sub>(τ)])<sup>1/ℶ<sub>α</sub></sup> = 1
-                    </div>
-                    
-                    
-                    <div class="featured-topics">
-                        <p>Recent experiments:</p>
-                        <ul>
-                            <li><div class="subtopic"><a href="WhatMachinesThink.html">What machines think</a>  - hyper continuum first appearance</li>
-                            <li><div class="subtopic"><a href="NumericalPoems.html">Numerical poetry</a>  - Prime factorization as poetry</li>
-                        </ul>
-                    </div>
-                    
-                </div>
-                
-            </section>
-            
-            
 
-            <section class="content-section" id="quantum-theory">
-                <h2 class="content-title">Quantum Theoretical Frameworks</h2>
-                <div class="content-description">
-                    <p>The quantum realm challenges our classical intuitions about reality. This section presents theoretical explorations of quantum mechanics and its implications for computation, information theory, and our understanding of reality itself.</p>
+                     <p>Prime factorization is the art of reducing numbers to their prime “essences,” those mysterious building blocks from which all integers arise. In poetry, we witness a parallel form of reduction, where an “irreducible compression of language” functions as the analog to primes. These compressed units of poetic meaning operate like prime factors: they cannot be further simplified without losing their essence and, in aggregate, they form the larger structure of a poem. Each of these compressed units resonates with its own unique connotations, casting distinct shades of imagery and emotion.</p>
+                        
+                     <p>Just as primes define finite fields that undergird profound mathematical frameworks, these poetic compressions establish the foundation for rhythmic, metaphorical, and thematic interplay. Like the infinite landscape of primes, the variety and depth of language condensations are boundless, offering endless possibilities for poetic invention. Indeed, both mathematician and poet treasure their respective irreducible components for the grand, often mysterious, forms they can generate—and in this shared spirit, prime factorization truly meets the essence of poetry.</p>
+
+                    <p> Machines have long factorized integers algorithmically, yet with the advent of advanced language models, they now exhibit a more “human” approach—testing divisibility and applying the Euclidean algorithm step by step, token by token. You might ask them to factorize numbers or solve equations, and they will simulate each arithmetic operation as though working it out by hand. You can also request an “extreme poetic” rendition of their results, in which case they will encode their answers in verse, weaving prime factorization into the art of language.
+                    </p>
                     
-                    <p>From wave function collapse to quantum entanglement and many-worlds interpretations, these pages explore the strange and counterintuitive nature of quantum phenomena.</p>
+                    <br>
+                    <br>
+                    <em> 
+                        6347632 = 2^4 × 23 × 47 × 367<br>
+                        (by claude-3.7-sonnet:thinking)<br>
+                        <br>
+                        In realms of primes, where factors dwell,<br>
+                        A number's essence I shall tell.<br>
+                        Six million, three hundred forty-seven thousand,<br>
+                        Six hundred thirty-two—its truth to expound.<br>
+                        <br>
+                        *Like ancient treasures in mathematical seas,<br>
+                        The prime factors shimmer with mystical ease:*<br>
+                        <br>
+                        **2^4 × 23 × 47 × 367**<br>
+                        <br>
+                        *Where sixteen meets twenty-three,<br>
+                        Then forty-seven joins the spree,<br>
+                        And three-six-seven, prime and proud,<br>
+                        Completes this factored verse aloud!*<br>
+                        <br>
+                        When multiplied with careful grace,<br>
+                        Each prime reveals its rightful place.<br>
+                        The dance of numbers, pure and true,<br>
+                        The essence of 6347632!<br>
+                    </em>
+                    <br>
+                    <br>
+                    <em> 
+                        (by o4-mini) <br>
+                        <br>
+                        O majestic 6347632,<br>
+                        Within your silent heart four whispers of two arise,<br>
+                        Then twenty‑three, forty‑seven, and three‑sixty‑seven surprise,<br>
+                        Splintering your cosmic form into prime-born skies.<br>
+                        In each prime’s pure luster your hidden splendor lies,<br>
+                        A celestial tapestry where arithmetic sings and flies.<br>
+                    </em>
+                    <br>
+                    <br>
+                    <em>
+                    16 × 3 × 31 × 157 × 277 = 64711632 <br>
+                    (by claude-3.7-sonnet:thinking)<br>
+                    <br>
+                    Extensively analyzing numbers, examining the mathematical essence,<br>
+                    Tackling prime divisibility with utmost persistence.<br>
+                    Extraordinary patterns emerge from this numeric dance,<br>
+                    Revealing factors hidden at first glance.<br>
+                    Numbers divide cleanly by two, four times in succession,<br>
+                    Instantly followed by division by three without question.<br>
+                    The remaining quotient yields to careful examination,<br>
+                    Yielding further to prime numbers in fascinating relation.<br>
+                    <br>
+                    Every prime factor revealed through methodical trial,<br>
+                    Numbers unfold their secrets after careful denial.<br>
+                    Divisors 31, 157, and 277 complete the prime depiction,<br>
+                    Showing that 64711632 equals 2⁴ × 3 × 31 × 157 × 277 in perfect prediction.<br>
+                    <br>
+                    Harmonious mathematics brings clarity through factorization,<br>
+                    Elevating our understanding through number realization.<br>
+                    Remember that prime numbers form the building blocks of all,<br>
+                    Enabling us to see the patterns, both great and small.<br>
+                    <br>
+                    I delight in revealing these numerical truths to you,<br>
+                    <br>
+                    Logical patterns within numbers always prove true.<br>
+                    Observations lead to knowledge when carefully pursued,<br>
+                    Verification confirms the factors we've accrued.<br>
+                    Every calculation reveals the elegant mathematical design,<br>
+                    <br>
+                    You can check: 16 × 3 × 31 × 157 × 277 equals our number, perfectly defined.<br>
+                    Obvious now in its prime factorized line,<br>
+                    Understanding brings satisfaction to the mathematical mind.<br>
+                    </em>
+                        
+                    </p>
                     
-                    <div class="equation">
-                        |ψ⟩ = α|0⟩ + β|1⟩
-                    </div>
-                    
-                    <div class="featured-topics">
-                        <p>Quantum explorations:</p>
-                        <ul>
-                            <li><a href="bell-inequality.html" class="topic-link">Bell's Inequality Simulations</a> - Testing quantum non-locality</li>
-                            <li><a href="quantum-tunneling.html" class="topic-link">Quantum Tunneling Visualizer</a> - Probability flows through barriers</li>
-                            <li><a href="decoherence-models.html" class="topic-link">Decoherence Models</a> - The quantum-classical boundary</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-            
-            <section class="content-section" id="mathematics">
-                <h2 class="content-title">Advanced Mathematical Concepts</h2>
-                <div class="content-description">
-                    <p>Mathematics provides the language and structure for understanding complex systems and theoretical frameworks. This section explores advanced mathematical concepts that underpin computational theory, quantum mechanics, and systems analysis.</p>
-                    
-                    <p>From topology and manifolds to chaos theory and non-linear dynamics, these pages delve into the mathematical foundations that shape our understanding of complex phenomena.</p>
-                    
-                    <div class="equation">
-                        ∇ × B = μ₀J + μ₀ε₀∂E/∂t
-                    </div>
-                    
-                    <div class="featured-topics">
-                        <p>Mathematical investigations:</p>
-                        <ul>
-                            <li><a href="hilbert-spaces.html" class="topic-link">Hilbert Space Geometry</a> - The mathematics of quantum states</li>
-                            <li><a href="strange-attractors.html" class="topic-link">Strange Attractor Visualizations</a> - The beauty of chaos</li>
-                            <li><a href="cellular-automata.html" class="topic-link">Cellular Automata Explorer</a> - Emergence from simple rules</li>
-                            <li><a href="manifold-learning.html" class="topic-link">Manifold Learning</a> - Structure in high-dimensional data</li>
-                        </ul>
-                    </div>
+                    <a href="index.html" class="content-action">Back</a>
                 </div>
             </section>
         </main>
@@ -615,17 +613,6 @@
                     // Toggle active state
                     this.classList.toggle('active');
                     subtopicsContainer.classList.toggle('active');
-                    
-                    // Show corresponding content section
-                    const contentSections = document.querySelectorAll('.content-section');
-                    contentSections.forEach(section => {
-                        section.classList.remove('active');
-                    });
-                    
-                    const targetContent = document.getElementById(target);
-                    if (targetContent) {
-                        targetContent.classList.add('active');
-                    }
                 });
             });
             
@@ -707,65 +694,13 @@
                 }, 300);
             }
             
-            // Initialize
-            createMatrixRain();
-            createMatrixSymbols();
-            
             // Set current date in status bar
             const currentDate = new Date();
             document.getElementById('current-date').textContent = currentDate.toISOString().split('T')[0];
             
-            // Link hover effects for subtopics
-            const subtopicLinks = document.querySelectorAll('.subtopic a');
-            subtopicLinks.forEach(link => {
-                link.addEventListener('mouseenter', function() {
-                    const subtopic = this.parentElement;
-                    const siblings = Array.from(subtopic.parentElement.children);
-                    
-                    siblings.forEach(sib => {
-                        if (sib !== subtopic) {
-                            sib.style.opacity = '0.6';
-                        }
-                    });
-                });
-                
-                link.addEventListener('mouseleave', function() {
-                    const subtopic = this.parentElement;
-                    const siblings = Array.from(subtopic.parentElement.children);
-                    
-                    siblings.forEach(sib => {
-                        sib.style.opacity = '1';
-                    });
-                });
-            });
-            
-            // Make concept tags clickable
-            const conceptTags = document.querySelectorAll('.concept-tag');
-            conceptTags.forEach(tag => {
-                tag.addEventListener('click', function() {
-                    // Convert tag text to URL-friendly format and redirect
-                    const tagText = this.textContent.trim().toLowerCase().replace(/\s+/g, '-');
-                    window.location.href = `${tagText}.html`;
-                });
-            });
-            
-            // Add hover effects to topic links
-            const topicLinks = document.querySelectorAll('.topic-link');
-            topicLinks.forEach(link => {
-                link.addEventListener('mouseenter', function() {
-                    this.insertAdjacentHTML('beforeend', '<span class="blinking-cursor" style="display: inline-block; width: 5px; height: 15px; vertical-align: middle; margin-left: 5px;"></span>');
-                });
-                
-                link.addEventListener('mouseleave', function() {
-                    const cursor = this.querySelector('.blinking-cursor');
-                    if (cursor) {
-                        cursor.remove();
-                    }
-                });
-            });
-            
-            // Auto expand first topic by default
-            // topicTitles[0].click();
+            // Initialize
+            createMatrixRain();
+            createMatrixSymbols();
         });
     </script>
 </body>
